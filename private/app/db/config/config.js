@@ -12,7 +12,7 @@ const sequelize = new Sequelize('restaurant_ui', 'root', '79461313', {
 },
   port: "3306",
   pool: {
-    max: 5,
+    max: 5000,
     min: 0,
     acquire: 3000000,
     idle: 1000000
