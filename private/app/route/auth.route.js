@@ -20,7 +20,7 @@ module.exports = function(app, passport,path,User,jwt) {
             return next(err);
             }
             if (!user) { 
-                return res.json({msg:"Incorrect credentials"}); 
+                return res.json({msg:"Incorrect credentials",info}); 
             }
             req.logIn(user, function(err) {
             if (err) { 
