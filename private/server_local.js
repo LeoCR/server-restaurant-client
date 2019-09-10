@@ -268,7 +268,6 @@ require(path.resolve(__dirname+'/app/route/entree.route.js'))(app,path);
 require(path.resolve(__dirname+'/app/route/ingredient.route.js'))(app,path);
 require(path.resolve(__dirname+'/app/route/dessert.route.js'))(app,path);
 require(path.resolve(__dirname+'/app/route/user.route.js'))(app,path);
-require(path.resolve(__dirname+'/app/route/user.route.js'))(app,path);
 require(path.resolve(__dirname+'/app/route/invoice.route.js'))(app,path);
 require(path.resolve(__dirname+'/app/route/reservation.route.js'))(app,path);
 //load passport strategies

@@ -1,6 +1,6 @@
 var nodemailer = require('nodemailer');
 module.exports = function(app,express,path) {
-    const publicRoute = require(path.resolve(__dirname+'/../db/controller/public.controller.js')); 
+    const publicController = require(path.resolve(__dirname+'/../db/controller/public.controller.js')); 
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -39,9 +39,9 @@ module.exports = function(app,express,path) {
         res.status(200).sendFile(path.resolve(__dirname+'/../../../../react-redux-shopping-cart-restaurant/build/index.html'));
     });
     app.use('/',express.static(path.resolve(__dirname+'/../../../../react-redux-users-restaurant/build/')));
-    app.get('/api/getProducts',publicRoute.getAllProducts);
-    app.get('/api/product/:id',publicRoute.findProduct);
-    app.get('/api/product/ingredients/:id',publicRoute.findIngredients);
+    app.get('/api/getProducts',publicController.getAllProducts);
+    app.get('/api/product/:id',publicController.findProduct);
+    app.get('/api/product/ingredients/:id',publicController.findIngredients);
     app.use('/static/',express.static(path.resolve(__dirname+'/../../../../react-redux-checkout-restaurant/build/static/')));
     
     //app.use('/',express.static('/Users/leo/Documents/restaurant-public-template/'));
