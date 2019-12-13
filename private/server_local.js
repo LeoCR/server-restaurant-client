@@ -14,16 +14,16 @@ fs = require('fs'),
 https = require('https'),
 db = require(path.resolve(__dirname+'/app/db/config/config.js')),
 User = db.user,
-//paypal = require('paypal-rest-sdk'),
-jwt = require('jsonwebtoken');
-var cookieParser = require('cookie-parser'); 
+paypal = require('paypal-rest-sdk'),
+jwt = require('jsonwebtoken'),
+cookieParser = require('cookie-parser'); 
 var secretKey='943rjkhsOA)JAQ@#';
-/*
+
 paypal.configure({
   'mode': 'sandbox', //sandbox or live
   'client_id': 'AT20D6Vyit9Nlal8G1lic-3t8cBO51TBfeQC3ZIWUlvbBcW9pealAB9ORvnLGI42eYf4qs03xr5eX9r3',
   'client_secret': 'ELFcF3ADCUW6rmdSMC5JNIvUYwn8V9VYPHVqOy58V2ORWrqqbP1CKv2Kw1vX_NE2_br-7GyRHIShpRV5'
-});*/
+});
 var fbOpts={
   clientID: '1000175700179103',
   clientSecret: 'a9a5309580a601253cd18a4d23bfdf26',
@@ -190,11 +190,12 @@ app.get('/api/validate/authentication',function(req,res){
 });
 //https://developer.paypal.com/docs/api/payments/v1/#definition-details
 //https://developer.paypal.com/docs/api/payments/v1/#definition-amount
-var tempTotal=0;
-/*
+
 app.post('/api/pay-with-paypal',(req,res)=>{
+  var tempTotal=req.body.total.toString();
+  var tempSubtotal=req.body.subtotal.toString();
   const create_payment_json = {
-    "intent": "order",
+    "intent": "sale",
     "payer": {
         "payment_method": "paypal"
     },
@@ -208,14 +209,14 @@ app.post('/api/pay-with-paypal',(req,res)=>{
         },
         "amount": {
             "currency": "USD",
-            "total": req.body.total,
+            "total": tempTotal,
             "details":{
-              "subtotal": req.body.subtotal,
+              "subtotal": tempSubtotal,
               "tax": req.body.tax,
               "shipping": req.body.shipping
             }
         },
-        "description": "Hat for the best team ever."
+        "description": "Restaurant Food."
     }]
   };
   paypal.payment.create(create_payment_json, function (error, payment) {
@@ -227,13 +228,15 @@ app.post('/api/pay-with-paypal',(req,res)=>{
       tempTotal=req.body.total;
         for(let i =0;i<payment.links.length;i++){
             if(payment.links[i].rel==='approval_url'){
-              res.json(payment.links[i].href+"&total="+req.body.total);
+              res.json(payment.links[i].href);
             }
         }
     } 
   });
 });
 app.get('/paypal/success',(req,res)=>{
+    var headerInvoices=JSON.parse(req.cookies.restaurant_header_invoices);
+    var invoiceDetails=JSON.parse(req.cookies.restaurant_invoice_details);
     const payerId=req.query.PayerID,
     paymentId=req.query.paymentId;
     var execute_payment_json = {
@@ -241,26 +244,32 @@ app.get('/paypal/success',(req,res)=>{
       "transactions": [{
           "amount": {
               "currency": "USD",
-              "total": tempTotal
+              "total": req.cookies.restaurant_total
           }
       }]
     };
     paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
       if (error) {
-        console.log('An error occurs in  paypal.payment.create');
-        console.log(error);
         res.send(error);
-      } else {
-          console.log("Get Payment Response");
-          console.log(JSON.stringify(payment));
-          res.send(payment);
+      } 
+      else {
+          if(payment.state==="approved"){
+            for (let l = 0; l < headerInvoices.length; l++) {
+              const headInvc = headerInvoices[l];
+              console.log(headInvc);
+            }
+            for (let k = 0; k < invoiceDetails.length; k++) {
+              const invDetail = invoiceDetails[k];
+              console.log(invDetail);
+            }
+          }
+          res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
       }
   });
 });
 app.get('/paypal/cancel',(req,res)=>{
   res.send('Cancelled')
 });
-*/
 require(path.resolve(__dirname+'/app/route/public.route.js'))(app,express,path);
 require(path.resolve(__dirname+'/app/route/private.route.js'))(app,path,isLoggedIn);
 require(path.resolve(__dirname+'/app/route/strongDish.route.js'))(app,path);

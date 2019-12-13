@@ -3,20 +3,14 @@ db = require(path.resolve(__dirname+'/../config/config.js')),
 User = db.user,
 sequelize=db.sequelize;
 exports.findByEmail=(req,res)=>{
-    User.findOne({ where: {email: req.params.email} }).then(user => {
+    User.findOne({ attributes: ['id'],where: {email: req.params.email} }).then(user => {
         if(user){
             res.send(user)
         }
         else{
             res.json({user:null});
         }
-    }) 
-    /* 
-    var sqlFindUser="SELECT * FROM restaurant_ui.USER WHERE email='"+req.params.email+"';";
-    sequelize.query(sqlFindUser, { type: sequelize.QueryTypes.SELECT})
-    .then(user => {
-                res.send(user);     
-    })*/
+    })  
 }
 exports.findById = (req, res) => {	
 	User.findByPk(req.params.id).then(user => {
