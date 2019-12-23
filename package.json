@@ -28,7 +28,7 @@
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "express-fileupload": "^1.0.0",
+    "express-fileupload": "^1.1.6",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.15.6",
     "jsonwebtoken": "^8.5.1",
@@ -41,7 +41,8 @@
     "passport-google-oauth2": "^0.2.0",
     "passport-local": "^1.0.0",
     "paypal-rest-sdk": "^1.8.1",
-    "sequelize": "^5.19.5"
+    "sequelize": "^5.19.5",
+    "universal-cookie": "^4.0.2"
   },
   "dependencies": {
     "nodemon": "^1.18.7"

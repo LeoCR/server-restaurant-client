@@ -7,7 +7,9 @@ module.exports = (sequelize, Sequelize) => {
         client_restaurant:Sequelize.INTEGER,
         header_invoice: Sequelize.INTEGER,
         order_code:Sequelize.STRING,
-        date_of_billing:Sequelize.DATE
+        date_of_billing:Sequelize.DATE,
+        paypalID:Sequelize.STRING,
+        paypalPayerID:Sequelize.STRING,
         },{
             timestamps: false,
             freezeTableName: true,

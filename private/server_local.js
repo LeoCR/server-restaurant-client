@@ -17,7 +17,9 @@ User = db.user,
 paypal = require('paypal-rest-sdk'),
 jwt = require('jsonwebtoken'),
 cookieParser = require('cookie-parser'); 
-var secretKey='943rjkhsOA)JAQ@#';
+var secretKey='943rjkhsOA)JAQ@#',
+Invoice = db.invoiceDetail,
+HeaderInvoice=db.headerInvoice;
 
 paypal.configure({
   'mode': 'sandbox', //sandbox or live
@@ -194,13 +196,23 @@ app.get('/api/validate/authentication',function(req,res){
 app.post('/api/pay-with-paypal',(req,res)=>{
   var tempTotal=req.body.total.toString();
   var tempSubtotal=req.body.subtotal.toString();
+  /*console.log('tempTotal '+tempTotal);
+  console.log('tempSubtotal '+tempSubtotal);
+  console.log('req.body.items');
+  console.log(req.body.items);
+  console.log('req.body.tax');
+  console.log(req.body.tax);
+  console.log('req.body.shipping');
+  console.log(req.body.shipping);
+  res.send(req.body.items);*/
+  
   const create_payment_json = {
     "intent": "sale",
     "payer": {
         "payment_method": "paypal"
     },
     "redirect_urls": {
-        "return_url": "https://localhost:49652/paypal/success",
+        "return_url": "https://localhost:49652/paypal/payment/success",
         "cancel_url": "https://localhost:49652/paypal/cancel"
     },
     "transactions": [{
@@ -234,12 +246,10 @@ app.post('/api/pay-with-paypal',(req,res)=>{
     } 
   });
 });
-app.get('/paypal/success',(req,res)=>{
-    var headerInvoices=JSON.parse(req.cookies.restaurant_header_invoices);
-    var invoiceDetails=JSON.parse(req.cookies.restaurant_invoice_details);
-    const payerId=req.query.PayerID,
-    paymentId=req.query.paymentId;
-    var execute_payment_json = {
+app.get('/paypal/payment/success',(req,res)=>{
+    var payerId=req.query.PayerID,
+    paymentId=req.query.paymentId,
+    execute_payment_json = {
       "payer_id": payerId,
       "transactions": [{
           "amount": {
@@ -253,17 +263,7 @@ app.get('/paypal/success',(req,res)=>{
         res.send(error);
       } 
       else {
-          if(payment.state==="approved"){
-            for (let l = 0; l < headerInvoices.length; l++) {
-              const headInvc = headerInvoices[l];
-              console.log(headInvc);
-            }
-            for (let k = 0; k < invoiceDetails.length; k++) {
-              const invDetail = invoiceDetails[k];
-              console.log(invDetail);
-            }
-          }
-          res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
+        res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
       }
   });
 });
