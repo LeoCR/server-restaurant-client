@@ -8,8 +8,9 @@ module.exports = (sequelize, Sequelize) => {
         header_invoice: Sequelize.INTEGER,
         order_code:Sequelize.STRING,
         date_of_billing:Sequelize.DATE,
-        paypalID:Sequelize.STRING,
-        paypalPayerID:Sequelize.STRING,
+        paypal_id:Sequelize.STRING,
+        paypal_payer_id:Sequelize.STRING,
+        paypal_token:Sequelize.STRING
         },{
             timestamps: false,
             freezeTableName: true,

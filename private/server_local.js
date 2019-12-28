@@ -263,6 +263,13 @@ app.get('/paypal/payment/success',(req,res)=>{
         res.send(error);
       } 
       else {
+        console.log('payment');
+        console.log(payment);
+        console.log('paymentId');
+        console.log(paymentId);
+        console.log('payerId');
+        console.log(payerId);
+        
         res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
       }
   });

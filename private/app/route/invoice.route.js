@@ -2,6 +2,7 @@ module.exports = function(app,path) {
     const invoice = require(path.resolve(__dirname+'/../db/controller/invoice.controller.js')); 
     app.post('/api/add/header-invoice',invoice.createHeaderInvoice);
     app.post('/api/add/invoice',invoice.createInvoice);
+    app.post('/api/add/invoice-paypal',invoice.createPaypalInvoice);
     app.get('/api/invoice-detail/get-last',invoice.getLastInvoiceDetail);
     app.get('/api/invoice-detail/get-last-id-invoice-detail',invoice.getLastInvoiceDetailId);
     app.get('/api/header-invoice/get-last-header-id',invoice.getLastHeaderId);

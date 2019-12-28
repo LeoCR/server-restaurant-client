@@ -66,6 +66,24 @@ exports.createInvoice=(req,res)=>{
         res.status(500).json({msg: "error", details: err});
     });
 }
+exports.createPaypalInvoice=(req,res)=>{
+    Invoice.create({
+        id_invoice_detail:req.body.invoiceDetail.id_invoice_detail,
+        client_restaurant:req.body.invoiceDetail.client_restaurant,
+        header_invoice:req.body.invoiceDetail.header_invoice,
+        order_code:req.body.invoiceDetail.order_code,
+        date_of_billing:req.body.invoiceDetail.date_of_billing,
+        paypal_id:req.body.invoiceDetail.paypal_id,
+        paypal_payer_id:req.body.invoiceDetail.paypal_payer_id,
+        paypal_token:req.body.invoiceDetail.paypal_token
+    })
+    .then(invoice=>{
+        res.send(invoice);
+    }).catch(err => {
+        console.log(err);
+        res.status(500).json({msg: "error", details: err});
+    });
+}
 exports.getLastInvoiceDetail=(req,res)=>{
     var sqlFindUser="SELECT * FROM restaurant_ui.INVOICE_DETAIL ORDER BY header_invoice DESC LIMIT 1;";
     sequelize.query(sqlFindUser, { type: sequelize.QueryTypes.SELECT})
