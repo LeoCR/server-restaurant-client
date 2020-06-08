@@ -14,12 +14,9 @@ fs = require('fs'),
 https = require('https'),
 db = require(path.resolve(__dirname+'/app/db/config/config.js')),
 User = db.user,
-paypal = require('paypal-rest-sdk'),
-jwt = require('jsonwebtoken'),
-cookieParser = require('cookie-parser'); 
-var secretKey='943rjkhsOA)JAQ@#',
-Invoice = db.invoiceDetail,
-HeaderInvoice=db.headerInvoice;
+paypal = require('paypal-rest-sdk'), 
+cookieParser = require('cookie-parser'),
+secretKey='943rjkhsOA)JAQ@#';
 
 paypal.configure({
   'mode': 'sandbox', //sandbox or live
@@ -40,10 +37,8 @@ var googleOpts={
     passReqToCallback : true
 };
 
-var googleCallback=function(request, accessToken, refreshToken, profile, done) {
-  console.log('profile GoogleStrategy');
-  var email=profile.email;
-  console.log(profile);
+var googleCallback=function(request, accessToken, refreshToken, profile, done) { 
+  var email=profile.email; 
   if(email!==''||email!==undefined){
     var dateTime = new Date();
     User.findOne({ where: {email} }).then(user => {
@@ -53,9 +48,7 @@ var googleCallback=function(request, accessToken, refreshToken, profile, done) {
           provider:'google'
         }, 
         { where: {email:email}}).then(userUpdated => {		
-          // Send created customer to client
-          console.log('userUpdated');
-          console.log(userUpdated);
+          //console.log(userUpdated);
         }); 
       }
       else{
@@ -69,18 +62,14 @@ var googleCallback=function(request, accessToken, refreshToken, profile, done) {
           created_at:dateTime,
           updated_at:dateTime
         }).then(userCreated => {		
-          console.log('userCreated');  
-          console.log(userCreated);
+          //console.log(userCreated);
         }); 
       }
     });
   }
   done(null, profile);
 };
-var fbCallback=function(accessToken, refreshToken, profile, done) {
-  console.log('accessToken', accessToken);
-  console.log('refreshToken', refreshToken);
-  console.log('profile',profile);
+var fbCallback=function(accessToken, refreshToken, profile, done) { 
   var email=profile.emails[0].value;
   console.log('profile.emails[0].value '+email);
   if(email!==''||email!==undefined){
@@ -92,9 +81,7 @@ var fbCallback=function(accessToken, refreshToken, profile, done) {
           last_login: dateTime
         }, 
         { where: {email:email}}).then(userUpdated => {		
-          // Send created customer to client
-          console.log('userUpdated');
-          console.log(userUpdated);
+          //console.log(userUpdated);
         }); 
       }
       else{
@@ -108,8 +95,7 @@ var fbCallback=function(accessToken, refreshToken, profile, done) {
           created_at:dateTime,
           updated_at:dateTime
         }).then(userCreated => {		
-          console.log('userCreated');  
-          console.log(userCreated);
+          //console.log(userCreated);
         }); 
       }
     })
@@ -190,22 +176,14 @@ app.get('/api/validate/authentication',function(req,res){
     res.json({isAuthenticated:false});
   }
 });
-//https://developer.paypal.com/docs/api/payments/v1/#definition-details
-//https://developer.paypal.com/docs/api/payments/v1/#definition-amount
 
 app.post('/api/pay-with-paypal',(req,res)=>{
   var tempTotal=req.body.total.toString();
   var tempSubtotal=req.body.subtotal.toString();
-  /*console.log('tempTotal '+tempTotal);
-  console.log('tempSubtotal '+tempSubtotal);
-  console.log('req.body.items');
-  console.log(req.body.items);
-  console.log('req.body.tax');
-  console.log(req.body.tax);
-  console.log('req.body.shipping');
-  console.log(req.body.shipping);
-  res.send(req.body.items);*/
-  
+  /**
+  @see https://developer.paypal.com/docs/api/payments/v1/#definition-details
+  @see https://developer.paypal.com/docs/api/payments/v1/#definition-amount
+  */
   const create_payment_json = {
     "intent": "sale",
     "payer": {
@@ -228,13 +206,11 @@ app.post('/api/pay-with-paypal',(req,res)=>{
               "shipping": req.body.shipping
             }
         },
-        "description": "Restaurant Food."
+        "description": "Restaurant Food Web App."
     }]
   };
   paypal.payment.create(create_payment_json, function (error, payment) {
     if (error) {
-      console.log('An error occurs in  paypal.payment.create');
-      console.log(error);
       res.send(error);
     } else {
       tempTotal=req.body.total;
@@ -262,14 +238,7 @@ app.get('/paypal/payment/success',(req,res)=>{
       if (error) {
         res.send(error);
       } 
-      else {
-        console.log('payment');
-        console.log(payment);
-        console.log('paymentId');
-        console.log(paymentId);
-        console.log('payerId');
-        console.log(payerId);
-        
+      else {  
         res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
       }
   });
@@ -288,7 +257,7 @@ require(path.resolve(__dirname+'/app/route/invoice.route.js'))(app,path);
 require(path.resolve(__dirname+'/app/route/reservation.route.js'))(app,path);
 //load passport strategies
 require(path.resolve(__dirname+'/app/db/config/passport/passport.js'))(passport, models.user);
-require(path.resolve(__dirname+'/app/route/auth.route.js'))(app,passport,path,User,jwt); 
+require(path.resolve(__dirname+'/app/route/auth.route.js'))(app,passport,path); 
 app.route('/logout').get(function(req,res){
     req.session.destroy();
     req.logout();
