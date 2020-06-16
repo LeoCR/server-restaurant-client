@@ -14,15 +14,15 @@ fs = require('fs'),
 https = require('https'),
 db = require(path.resolve(__dirname+'/app/db/config/config.js')),
 User = db.user,
-paypal = require('paypal-rest-sdk'), 
 cookieParser = require('cookie-parser'),
-secretKey='943rjkhsOA)JAQ@#';
+secretKey='943rjkhsOA)JAQ@#',
+paypal = require('@paypal/checkout-server-sdk');
 
-paypal.configure({
-  'mode': 'sandbox', //sandbox or live
-  'client_id': 'AT20D6Vyit9Nlal8G1lic-3t8cBO51TBfeQC3ZIWUlvbBcW9pealAB9ORvnLGI42eYf4qs03xr5eX9r3',
-  'client_secret': 'ELFcF3ADCUW6rmdSMC5JNIvUYwn8V9VYPHVqOy58V2ORWrqqbP1CKv2Kw1vX_NE2_br-7GyRHIShpRV5'
-});
+const clientId = "AT20D6Vyit9Nlal8G1lic-3t8cBO51TBfeQC3ZIWUlvbBcW9pealAB9ORvnLGI42eYf4qs03xr5eX9r3";
+const clientSecret = "ELFcF3ADCUW6rmdSMC5JNIvUYwn8V9VYPHVqOy58V2ORWrqqbP1CKv2Kw1vX_NE2_br-7GyRHIShpRV5";
+var environment = new paypal.core.SandboxEnvironment(clientId, clientSecret);
+var client = new paypal.core.PayPalHttpClient(environment);
+
 var fbOpts={
   clientID: '1000175700179103',
   clientSecret: 'a9a5309580a601253cd18a4d23bfdf26',
@@ -142,7 +142,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { 
     scope:[ 'profile','https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email'],
-    successRedirect: '/user',
+    successRedirect: '/checkout',
     failureRedirect: '/'
   }
 ));
@@ -154,7 +154,7 @@ authentication has failed.
 */
 app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { 
-    successRedirect: '/user',
+    successRedirect: '/checkout',
     failureRedirect: '/',scope: ["email"] }
 ));
 app.use(compression());
@@ -177,71 +177,94 @@ app.get('/api/validate/authentication',function(req,res){
   }
 });
 
-app.post('/api/pay-with-paypal',(req,res)=>{
-  var tempTotal=req.body.total.toString();
-  var tempSubtotal=req.body.subtotal.toString();
-  /**
-  @see https://developer.paypal.com/docs/api/payments/v1/#definition-details
-  @see https://developer.paypal.com/docs/api/payments/v1/#definition-amount
-  */
-  const create_payment_json = {
-    "intent": "sale",
-    "payer": {
-        "payment_method": "paypal"
-    },
-    "redirect_urls": {
-        "return_url": "https://localhost:49652/paypal/payment/success",
-        "cancel_url": "https://localhost:49652/paypal/cancel"
-    },
-    "transactions": [{
-        "item_list": {
-            "items": req.body.items
-        },
-        "amount": {
-            "currency": "USD",
-            "total": tempTotal,
-            "details":{
-              "subtotal": tempSubtotal,
-              "tax": req.body.tax,
-              "shipping": req.body.shipping
-            }
-        },
-        "description": "Restaurant Food Web App."
-    }]
-  };
-  paypal.payment.create(create_payment_json, function (error, payment) {
-    if (error) {
-      res.send(error);
-    } else {
-      tempTotal=req.body.total;
-        for(let i =0;i<payment.links.length;i++){
-            if(payment.links[i].rel==='approval_url'){
-              res.json(payment.links[i].href);
-            }
-        }
-    } 
+app.post('/api/pay-with-paypal',async(req,res)=>{
+  // Here, OrdersCreateRequest() creates a POST request to /v2/checkout/orders
+  let request = new paypal.orders.OrdersCreateRequest();
+  // Construct a request object and set desired parameters
+  request.requestBody({
+      "intent": "CAPTURE",
+      "application_context": {
+          "return_url": "https://localhost:49652/paypal/payment/success",
+          "cancel_url": "https://localhost:49652/paypal/cancel",
+          "brand_name": "React Redux Node-JS Restaurant",
+          "locale": "en-US",
+          "landing_page": "BILLING",
+          "shipping_preference": "NO_SHIPPING",
+          "user_action": "PAY_NOW"
+      },
+      "purchase_units": [
+          {
+              "reference_id": "ReactReduxRestaurant",
+              "description": "Food of Restaurant",
+              "custom_id": "Food",
+              "soft_descriptor": "FoodOfRestaurant",
+              "amount": {
+                  "currency_code": "USD",
+                  "value": req.body.subtotal,
+                  "breakdown": {
+                      "item_total": {
+                          "currency_code": "USD",
+                          "value": req.body.item_total
+                      },
+                      "shipping": {
+                          "currency_code": "USD",
+                          "value": "0"
+                      },
+                      "tax_total": {
+                          "currency_code": "USD",
+                          "value":req.body.tax_total
+                      },
+                      "shipping_discount": {
+                          "currency_code": "USD",
+                          "value": "0"
+                      }
+                  }
+              },
+              "items":req.body.items
+          }
+      ]
   });
+  var TempData;
+  // Call API with your client and get a response for your call
+  try {
+    let response = await client.execute(request);
+    TempData={
+      id:response.result.id,
+      data:response.result.links[1]
+    }; 
+    return res.send(TempData)
+  } 
+  catch (error) {
+    return res.send(error);
+  }
 });
 app.get('/paypal/payment/success',(req,res)=>{
-    var payerId=req.query.PayerID,
-    paymentId=req.query.paymentId,
-    execute_payment_json = {
-      "payer_id": payerId,
-      "transactions": [{
-          "amount": {
-              "currency": "USD",
-              "total": req.cookies.restaurant_total
-          }
-      }]
-    };
-    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
-      if (error) {
-        res.send(error);
-      } 
-      else {  
-        res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
+  var payerId=req.query.PayerID,
+  paypalToken=req.query.token;
+  try { 
+      let captureOrder =  async function(orderId) {
+          var request = new paypal.orders.OrdersCaptureRequest(orderId);
+          request.requestBody({});
+          // Call API with your client and get a response for your call
+          let response = await client.execute(request).then((res)=>{
+            return res;
+          })
+          .catch((e)=>{
+            console.log("An error occurs");
+            return e; 
+          });
+          return response;
       }
-  });
+      if(req.cookies.paypal_id!==undefined&&payerId!==undefined&&paypalToken!==undefined){
+          captureOrder(req.cookies.paypal_id);
+          res.status(200).sendFile(path.resolve(__dirname+'/../../react-redux-checkout-restaurant/build/index.html'));
+      }
+      else{
+          return res.send('Sorry this page is unavailable')
+      } 
+  } catch (error) {
+    return res.send(error);
+  }   
 });
 app.get('/paypal/cancel',(req,res)=>{
   res.send('Cancelled')
