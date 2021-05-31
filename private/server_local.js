@@ -15,41 +15,39 @@ https = require('https'),
 db = require(path.resolve(__dirname+'/app/db/config/config.js')),
 User = db.user,
 cookieParser = require('cookie-parser'),
-secretKey='943rjkhsOA)JAQ@#',
+
 paypal = require('@paypal/checkout-server-sdk');
-
-const clientId = "AT20D6Vyit9Nlal8G1lic-3t8cBO51TBfeQC3ZIWUlvbBcW9pealAB9ORvnLGI42eYf4qs03xr5eX9r3";
-const clientSecret = "ELFcF3ADCUW6rmdSMC5JNIvUYwn8V9VYPHVqOy58V2ORWrqqbP1CKv2Kw1vX_NE2_br-7GyRHIShpRV5";
-var environment = new paypal.core.SandboxEnvironment(clientId, clientSecret);
-var client = new paypal.core.PayPalHttpClient(environment);
-
-var fbOpts={
-  clientID: '1000175700179103',
-  clientSecret: 'a9a5309580a601253cd18a4d23bfdf26',
-  callbackURL: "https://localhost:49652/auth/facebook/callback",
+require("dotenv").config();
+const clientPaypalId = process.env.PAYPAL_CLIENT_ID,
+clientPaypalSecret = process.env.PAYPAL_CLIENT_SECRET,
+environment = new paypal.core.SandboxEnvironment(clientPaypalId, clientPaypalSecret),
+client = new paypal.core.PayPalHttpClient(environment),
+secretKey=process.env.LOCAL_SECRET_KEY;
+const PORT = process.env.PORT||49652;
+const fbOpts={
+  clientID: process.env.FACEBOOK_CLIENT_ID,
+  clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+  callbackURL: "https://localhost:"+PORT+"/auth/facebook/callback",
   enableProof: true,
   profileFields: ['id', 'displayName', 'photos', 'emails','first_name', 'last_name']
 };
-var googleOpts={
-    clientID:"309759265514-0eq8pofu7m5066l0bhbctsf1fc5j0t6q.apps.googleusercontent.com",
-    clientSecret:"-K862ptYDMCBVqjY9lW7n406",
+const googleOpts={
+    clientID:process.env.GMAIL_CLIENT_ID,
+    clientSecret:process.env.GMAIL_CLIENT_SECRET,
     callbackURL: "/auth/google/callback",
     passReqToCallback : true
 };
-
-var googleCallback=function(request, accessToken, refreshToken, profile, done) { 
-  var email=profile.email; 
+const googleCallback=(request, accessToken, refreshToken, profile, done)=> { 
+  const email=profile.email; 
   if(email!==''||email!==undefined){
-    var dateTime = new Date();
+    const dateTime = new Date();
     User.findOne({ where: {email} }).then(user => {
       if(user){
         User.update({
           last_login: dateTime,
           provider:'google'
         }, 
-        { where: {email:email}}).then(userUpdated => {		
-          //console.log(userUpdated);
-        }); 
+        { where: {email}}); 
       }
       else{
         User.create({  
@@ -61,28 +59,23 @@ var googleCallback=function(request, accessToken, refreshToken, profile, done) {
           email:email,
           created_at:dateTime,
           updated_at:dateTime
-        }).then(userCreated => {		
-          //console.log(userCreated);
-        }); 
+        }) 
       }
     });
   }
   done(null, profile);
 };
-var fbCallback=function(accessToken, refreshToken, profile, done) { 
-  var email=profile.emails[0].value;
-  console.log('profile.emails[0].value '+email);
+const fbCallback=(accessToken, refreshToken, profile, done) =>{ 
+  const email=profile.emails[0].value; 
   if(email!==''||email!==undefined){
-    var dateTime = new Date();
+    const dateTime = new Date();
     User.findOne({ where: {email} }).then(user => {
       if(user){
         User.update({
           provider:'facebook',
           last_login: dateTime
         }, 
-        { where: {email:email}}).then(userUpdated => {		
-          //console.log(userUpdated);
-        }); 
+        { where: {email}}); 
       }
       else{
         User.create({  
@@ -94,8 +87,6 @@ var fbCallback=function(accessToken, refreshToken, profile, done) {
           email:email,
           created_at:dateTime,
           updated_at:dateTime
-        }).then(userCreated => {		
-          //console.log(userCreated);
         }); 
       }
     })
@@ -103,8 +94,8 @@ var fbCallback=function(accessToken, refreshToken, profile, done) {
   done(null, profile);
 };
 //Models
-var models = require(path.resolve(__dirname+"/app/db/config/config.js"));
-function isLoggedIn(req, res, next) {
+const models = require(path.resolve(__dirname+"/app/db/config/config.js"));
+const isLoggedIn=(req, res, next)=> {
   if (req.isAuthenticated()){
       return next();
   }
@@ -113,7 +104,7 @@ function isLoggedIn(req, res, next) {
   }
 }
 app.use(cors());
-app.use(function(req, res, next) {
+app.use((req, res, next)=> {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
@@ -159,7 +150,7 @@ app.get('/auth/facebook/callback',
 ));
 app.use(compression());
 app.use(methodOverride());
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) =>{
   res.send('An error occurs: '+err);
 });
 
@@ -168,7 +159,7 @@ app.engine('html', exphbs({
     extname: '.html'
 }));
 app.set('view engine', '.html');
-app.get('/api/validate/authentication',function(req,res){
+app.get('/api/validate/authentication',(req,res)=>{
   if (req.isAuthenticated()){
     res.json({isAuthenticated:true});
   }
@@ -184,8 +175,8 @@ app.post('/api/pay-with-paypal',async(req,res)=>{
   request.requestBody({
       "intent": "CAPTURE",
       "application_context": {
-          "return_url": "https://localhost:49652/paypal/payment/success",
-          "cancel_url": "https://localhost:49652/paypal/cancel",
+          "return_url": "https://localhost:"+PORT+"/paypal/payment/success",
+          "cancel_url": "https://localhost:"+PORT+"/paypal/cancel",
           "brand_name": "React Redux Node-JS Restaurant",
           "locale": "en-US",
           "landing_page": "BILLING",
@@ -224,7 +215,7 @@ app.post('/api/pay-with-paypal',async(req,res)=>{
           }
       ]
   });
-  var TempData;
+  let TempData;
   // Call API with your client and get a response for your call
   try {
     let response = await client.execute(request);
@@ -239,11 +230,11 @@ app.post('/api/pay-with-paypal',async(req,res)=>{
   }
 });
 app.get('/paypal/payment/success',(req,res)=>{
-  var payerId=req.query.PayerID,
+  const payerId=req.query.PayerID,
   paypalToken=req.query.token;
   try { 
       let captureOrder =  async function(orderId) {
-          var request = new paypal.orders.OrdersCaptureRequest(orderId);
+          const request = new paypal.orders.OrdersCaptureRequest(orderId);
           request.requestBody({});
           // Call API with your client and get a response for your call
           let response = await client.execute(request).then((res)=>{
@@ -281,7 +272,7 @@ require(path.resolve(__dirname+'/app/route/reservation.route.js'))(app,path);
 //load passport strategies
 require(path.resolve(__dirname+'/app/db/config/passport/passport.js'))(passport, models.user);
 require(path.resolve(__dirname+'/app/route/auth.route.js'))(app,passport,path); 
-app.route('/logout').get(function(req,res){
+app.route('/logout').get((req,res)=>{
     req.session.destroy();
     req.logout();
     res.redirect('/');
@@ -296,12 +287,12 @@ const httpsOptions = {
 }
 //Sync Database
 models.sequelize.sync().then(function() {
-    console.log('https://localhost:49652 works')
-}).catch(function(err) {
-    console.log(err, "Something went wrong with the Database Update!")
+    console.log('https://localhost:'+PORT+' works')
+}).catch((err)=> {
+    console.log(err, "Something went wrong with the Database!")
 });
 
-const server=https.createServer(httpsOptions,app, (req, res) => {
+https.createServer(httpsOptions,app, (req, res) => {
     res.set({
       'Access-Control-Allow-Credentials': true,
       'Cache-Control': 'no-cache',
@@ -313,5 +304,5 @@ const server=https.createServer(httpsOptions,app, (req, res) => {
     })
     res.writeHead(200);
     res.end('hello world\n');
-    console.log('https://localhost:49652 !');
-}).listen(49652); 
+    console.log('https://localhost:'+PORT+' !');
+}).listen(PORT); 

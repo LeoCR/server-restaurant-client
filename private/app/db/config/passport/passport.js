@@ -1,32 +1,32 @@
-var bCrypt = require('bcrypt-nodejs');
-module.exports = function(passport, user) {
+const bCrypt = require('bcrypt-nodejs');
+module.exports = (passport, user)=> {
     /**
     * @see https://code.tutsplus.com/tutorials/using-passport-with-sequelize-and-mysql--cms-27537
     **/
-    var User = user;
-    var LocalStrategy = require('passport-local').Strategy;
+    const User = user;
+    const LocalStrategy = require('passport-local').Strategy;
     passport.use('local-signup', new LocalStrategy(
         {
             usernameField: 'email',
             passwordField: 'password',
             passReqToCallback: true // allows us to pass back the entire request to the callback
         },
-        function(req, email, password, done) {
-            var generateHash = function(password) {
+        (req, email, password, done)=> {
+            const generateHash = function(password) {
                 return bCrypt.hashSync(password, bCrypt.genSaltSync(8), null);
             };
             User.findOne({
                 where: {
                     email: email
                 }
-            }).then(function(user) {
+            }).then((user)=>{
                 if (user){
                     return done(null, false, {
                         message: 'That email is already taken'
                     });
                 } else{
-                    var userPassword = generateHash(password);
-                    var data =
+                    const userPassword = generateHash(password);
+                    const data =
                         {
                             email: email,
                             password: userPassword,
@@ -35,7 +35,7 @@ module.exports = function(passport, user) {
                             lastname: req.body.lastname,
                             provider:'system'
                         };
-                    User.create(data).then(function(newUser, created) {
+                    User.create(data).then((newUser, created)=>{
                         if (!newUser) {
                             return done(null, false);
                         }
@@ -69,16 +69,16 @@ module.exports = function(passport, user) {
             passwordField: 'password',
             passReqToCallback: true // allows us to pass back the entire request to the callback
         },
-        function(req, email, password, done) {
-            var User = user;
-            var isValidPassword = function(userpass, password) {
+        (req, email, password, done)=>{
+            const User = user;
+            const isValidPassword = function(userpass, password) {
                 return bCrypt.compareSync(password, userpass);
             }
             User.findOne({
                 where: {
                     email: email
                 }
-            }).then(function(user) {
+            }).then((user)=> {
                 if (!user) {
                     return done(null, false, {
                         message: 'Email does not exist'
@@ -89,9 +89,9 @@ module.exports = function(passport, user) {
                         message: 'Incorrect password.'
                     });
                 }
-                var userinfo = user.get();
+                const userinfo = user.get();
                 return done(null, userinfo);
-            }).catch(function(err) {
+            }).catch((err)=>{
                 console.log("Error:", err);
                 return done(null, false, {
                     message: 'Something went wrong with your Signin'

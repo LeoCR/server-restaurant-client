@@ -1,7 +1,6 @@
 const path = require('path'), 
 db = require(path.resolve(__dirname+'/../config/config.js')),
-User = db.user,
-sequelize=db.sequelize;
+User = db.user;
 exports.findByEmail=(req,res)=>{
     User.findOne({ attributes: ['id'],where: {email: req.params.email} }).then(user => {
         if(user){

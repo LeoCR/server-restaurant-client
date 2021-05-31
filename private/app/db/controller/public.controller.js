@@ -6,7 +6,7 @@ StrongDish = db.strongDish,
 Entree = db.entree,
 sequelize=db.sequelize;
 exports.getAllProducts= (req, res) => {
-    var jsonData={};
+    let jsonData={};
     Drink.findAll().then(drink => {
         jsonData={ drinks: drink };  
     }).then(()=>{
@@ -27,7 +27,7 @@ exports.getAllProducts= (req, res) => {
 //
 // Find a Product by Id
 exports.findIngredients = (req, res) => {	
-    var idDish=req.params.id,
+    const idDish=req.params.id,
     sqlFindIngredients="SELECT INGREDIENT.id,INGREDIENT.name,"+
    " INGREDIENT.img,INGREDIENT_DISH.id_ingredient,"+
    " INGREDIENT_DISH.id_dish FROM INGREDIENT JOIN INGREDIENT_DISH "+
@@ -40,7 +40,7 @@ exports.findIngredients = (req, res) => {
 }
 // Find a Product by Id
 exports.findProduct = (req, res) => {	
-    var idProduct=req.params.id;
+    const idProduct=req.params.id;
     if(idProduct.includes('DRK')){
         Drink.findByPk(idProduct).then(drink => {
             res.send(drink);

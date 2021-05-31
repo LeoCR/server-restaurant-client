@@ -1,5 +1,5 @@
 module.exports = function(app, passport,path) {
-    var authController = require(path.resolve(__dirname+'/../db/controller/auth.controller.js'));
+    const authController = require(path.resolve(__dirname+'/../db/controller/auth.controller.js'));
     
     app.post('/api/signup', passport.authenticate('local-signup', {
             successRedirect: '/checkout',
@@ -8,8 +8,8 @@ module.exports = function(app, passport,path) {
     ));
     app.get('/api/logout', authController.logout);
    
-    app.post('/api/login', function(req, res, next) {
-        passport.authenticate('local-signin', function(err, user, info) {
+    app.post('/api/login', (req, res, next)=> {
+        passport.authenticate('local-signin', (err, user, info)=> {
             /**
              * @see http://www.passportjs.org/docs/authenticate/
              */
@@ -24,16 +24,7 @@ module.exports = function(app, passport,path) {
             req.logIn(user, function(err) {
                 if (err) { 
                     return next(err);
-                }/*
-                jwt.sign({user},secretKey,(err,token)=>{
-                    if(err){
-                        return res.send({msg:"An error occurs on /api/login jwt.sign(): ",error:err});
-                    }
-                    else{
-                        res.cookie("userData", {user,token}); 
-                        return res.send({user,token});
-                    }
-                });*/
+                } 
                 return res.send({user});
             });
     })(req, res, next);

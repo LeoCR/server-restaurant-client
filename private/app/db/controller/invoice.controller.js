@@ -5,7 +5,7 @@ HeaderInvoice=db.headerInvoice,
 sequelize=db.sequelize;
 
 exports.getInvoicesByClientId=(req,res)=>{
-	var sqlFindUser="SELECT distinct(order_code) AS order_code ,USER.email , INVOICE_DETAIL.date_of_billing, "+
+	const sqlFindUser="SELECT distinct(order_code) AS order_code ,USER.email , INVOICE_DETAIL.date_of_billing, "+
 	" USER.username FROM INVOICE_DETAIL "+
 	" INNER JOIN USER ON USER.id=INVOICE_DETAIL.client_restaurant where USER.id=" + req.params.id_client+ ";";
 	sequelize.query(sqlFindUser, { type: sequelize.QueryTypes.SELECT})
@@ -16,7 +16,7 @@ exports.getInvoicesByClientId=(req,res)=>{
 	});
 }
 exports.findProductsByOrderCode=(req,res)=>{
-	var sqlFindByorder_code="SELECT HEADER_INVOICE.id_header,HEADER_INVOICE.total,HEADER_INVOICE.product_name,HEADER_INVOICE.product_id,HEADER_INVOICE.product_quantity , INVOICE_DETAIL.order_code,INVOICE_DETAIL.date_of_billing "+
+	const sqlFindByorder_code="SELECT HEADER_INVOICE.id_header,HEADER_INVOICE.total,HEADER_INVOICE.product_name,HEADER_INVOICE.product_id,HEADER_INVOICE.product_quantity , INVOICE_DETAIL.order_code,INVOICE_DETAIL.date_of_billing "+
 	" FROM restaurant_ui.HEADER_INVOICE "+
 	" INNER JOIN INVOICE_DETAIL ON INVOICE_DETAIL.header_invoice=HEADER_INVOICE.id_header "+
 	" INNER JOIN USER ON INVOICE_DETAIL.client_restaurant=USER.id where INVOICE_DETAIL.order_code='"+req.params.order_code +"' AND USER.username='"+req.params.username+"' AND USER.id="+req.params.id+";";
@@ -85,7 +85,7 @@ exports.createPaypalInvoice=(req,res)=>{
     });
 }
 exports.getLastInvoiceDetail=(req,res)=>{
-    var sqlFindUser="SELECT * FROM restaurant_ui.INVOICE_DETAIL ORDER BY header_invoice DESC LIMIT 1;";
+    const sqlFindUser="SELECT * FROM restaurant_ui.INVOICE_DETAIL ORDER BY header_invoice DESC LIMIT 1;";
     sequelize.query(sqlFindUser, { type: sequelize.QueryTypes.SELECT})
     .then(invoiceDetail => {
                 res.send(invoiceDetail);     
@@ -95,7 +95,7 @@ exports.getLastInvoiceDetail=(req,res)=>{
     });
 }
 exports.getLastHeaderId=(req,res)=>{
-    var sqlFindUser="SELECT MAX(id_header) AS id_header FROM restaurant_ui.HEADER_INVOICE;";
+    const sqlFindUser="SELECT MAX(id_header) AS id_header FROM restaurant_ui.HEADER_INVOICE;";
     sequelize.query(sqlFindUser, { type: sequelize.QueryTypes.SELECT})
     .then(headerId => {
                 res.send(headerId);     
@@ -105,7 +105,7 @@ exports.getLastHeaderId=(req,res)=>{
     });
 }
 exports.getLastInvoiceDetailId=(req,res)=>{
-    var sqlFindUser="SELECT MAX(id_invoice_detail) AS id_invoice_detail FROM restaurant_ui.INVOICE_DETAIL;";
+    const sqlFindUser="SELECT MAX(id_invoice_detail) AS id_invoice_detail FROM restaurant_ui.INVOICE_DETAIL;";
     sequelize.query(sqlFindUser, { type: sequelize.QueryTypes.SELECT})
     .then(headerId => {
                 res.send(headerId);     
@@ -115,7 +115,7 @@ exports.getLastInvoiceDetailId=(req,res)=>{
     });
 }
 exports.countDistincOrderCode=(req,res)=>{
-    var sqlCountDistinctOrderCode="SELECT COUNT(DISTINCT order_code) AS maxOrderCode FROM INVOICE_DETAIL;";
+    const sqlCountDistinctOrderCode="SELECT COUNT(DISTINCT order_code) AS maxOrderCode FROM INVOICE_DETAIL;";
     sequelize.query(sqlCountDistinctOrderCode,{type:sequelize.QueryTypes.SELECT})
     .then(maxOrderCode=>{
         res.send(maxOrderCode)
